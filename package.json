@@ -12,8 +12,10 @@
     "test:playwright": "set NODE_OPTIONS=--experimental-vm-modules -r dotenv/config --experimental-json-modules && npx playwright test"
   },
   "dependencies": {
+
     "@faker-js/faker": "^8.0.2",
     "bcrypt": "^5.1.0",
+    "cloudinary": "^2.2.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

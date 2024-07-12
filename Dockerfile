@@ -17,5 +17,6 @@ RUN yarn install --pure-lockfile
 COPY --chown=node:node . .
 
 EXPOSE 8080
+RUN npm install
 
 CMD [ "npm", "start" ]
