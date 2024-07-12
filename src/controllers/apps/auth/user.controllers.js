@@ -15,7 +15,7 @@ import {
   forgotPasswordMailgenContent,
   sendEmail,
 } from "../../../utils/mail.js";
-
+import { uploadOnCloudinary } from "../../../utils/cloudinary.js";
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -462,13 +462,22 @@ const handleSocialLogin = asyncHandler(async (req, res) => {
 const updateUserAvatar = asyncHandler(async (req, res) => {
   // Check if user has uploaded an avatar
   if (!req.file?.filename) {
-    throw new ApiError(400, "Avatar image is required");
+    throw new ApiError(400, "Avatara image is required");
   }
+  // console.log(req?.file)
 
   // get avatar file system url and local path
-  const avatarUrl = getStaticFilePath(req, req.file?.filename);
-  const avatarLocalPath = getLocalPath(req.file?.filename);
-
+  // const avatarUrl = getStaticFilePath(req, req.file?.filename);
+  // const avatarLocalPath = getLocalPath(req.file?.filename);
+  const avatarLocalPath=  req.file.path
+  console.log(avatarLocalPath)
+  const avatar=await uploadOnCloudinary(avatarLocalPath)
+  if(!avatar)
+    {
+        console.log(400,"Avatar file is required")
+    throw new ApiError(400,"Avatar file is required")
+   
+}
   const user = await User.findById(req.user._id);
 
   let updatedUser = await User.findByIdAndUpdate(
@@ -478,8 +487,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       $set: {
         // set the newly uploaded avatar
         avatar: {
-          url: avatarUrl,
-          localPath: avatarLocalPath,
+          url: avatar,
+          // localPath: avatarLocalPath,
         },
       },
     },

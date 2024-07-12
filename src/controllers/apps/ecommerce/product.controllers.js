@@ -11,6 +11,7 @@ import {
 } from "../../../utils/helpers.js";
 import { MAXIMUM_SUB_IMAGE_COUNT } from "../../../constants.js";
 import { Category } from "../../../models/apps/ecommerce/category.models.js";
+import { uploadOnCloudinary } from "../../../utils/cloudinary.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
@@ -47,25 +48,28 @@ const createProduct = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Main image is required");
   }
 
-  const mainImageUrl = getStaticFilePath(
-    req,
-    req.files?.mainImage[0]?.filename
-  );
-  const mainImageLocalPath = getLocalPath(req.files?.mainImage[0]?.filename);
+  // const mainImageUrl = getStaticFilePath(
+  //   req,
+  //   req.files?.mainImage[0]?.filename
+  // );
+  const mainImageLocalPath = req.files?.mainImage[0]?.path
+  const mainImageUrl= await uploadOnCloudinary(mainImageLocalPath)
+  if(!mainImageUrl){
+    throw new ApiError(400, "Main image is required")
+  }
 
   // Check if user has uploaded any subImages if yes then extract the file path
   // else assign an empty array
   /**
    * @type {{ url: string; localPath: string; }[]}
    */
-  const subImages =
-    req.files.subImages && req.files.subImages?.length
-      ? req.files.subImages.map((image) => {
-          const imageUrl = getStaticFilePath(req, image.filename);
-          const imageLocalPath = getLocalPath(image.filename);
-          return { url: imageUrl, localPath: imageLocalPath };
-        })
-      : [];
+  const subImages = req.files.subImages && req.files.subImages.length
+  ? await Promise.all(req.files.subImages.map(async (image) => {
+      const imageLocalPath = image.path;
+      const imageUrl = await uploadOnCloudinary(imageLocalPath);
+      return { url: imageUrl, localPath: imageLocalPath };
+    }))
+  : [];
 
   const owner = req.user._id;
 
