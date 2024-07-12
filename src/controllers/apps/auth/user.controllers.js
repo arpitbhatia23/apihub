@@ -15,6 +15,8 @@ import {
   forgotPasswordMailgenContent,
   sendEmail,
 } from "../../../utils/mail.js";
+import { v2 as cloudinary} from "cloudinary";
+
 import { uploadOnCloudinary } from "../../../utils/cloudinary.js";
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
@@ -470,7 +472,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   // const avatarUrl = getStaticFilePath(req, req.file?.filename);
   // const avatarLocalPath = getLocalPath(req.file?.filename);
   const avatarLocalPath=  req.file.path
-  console.log(avatarLocalPath)
+  // console.log(avatarLocalPath)
   const avatar=await uploadOnCloudinary(avatarLocalPath)
   if(!avatar)
     {
@@ -478,6 +480,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400,"Avatar file is required")
    
 }
+// console.log(avatar)
   const user = await User.findById(req.user._id);
 
   let updatedUser = await User.findByIdAndUpdate(
@@ -487,7 +490,8 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
       $set: {
         // set the newly uploaded avatar
         avatar: {
-          url: avatar,
+          url: avatar.url,
+          public_id:avatar.public_id
           // localPath: avatarLocalPath,
         },
       },
@@ -496,10 +500,10 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
   ).select(
     "-password -refreshToken -emailVerificationToken -emailVerificationExpiry"
   );
-
+// console.log(updatedUser)
   // remove the old avatar
- // removeLocalFile(user.avatar.localPath);
-
+//  removeLocalFile(user.avatar.localPath);
+cloudinary.uploader.destroy(user.avatar.public_id)
   return res
     .status(200)
     .json(new ApiResponse(200, updatedUser, "Avatar updated successfully"));

@@ -19,6 +19,7 @@ const productSchema = new Schema(
       type: {
         url: String,
         localPath: String,
+        publicid:String,
       },
     },
     name: {
@@ -42,6 +43,7 @@ const productSchema = new Schema(
         {
           url: String,
           localPath: String,
+          publicid:String,
         },
       ],
       default: [],

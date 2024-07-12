@@ -53,8 +53,8 @@ const createProduct = asyncHandler(async (req, res) => {
   //   req.files?.mainImage[0]?.filename
   // );
   const mainImageLocalPath = req.files?.mainImage[0]?.path
-  const mainImageUrl= await uploadOnCloudinary(mainImageLocalPath)
-  if(!mainImageUrl){
+  const mainImage= await uploadOnCloudinary(mainImageLocalPath)
+  if(!mainImage){
     throw new ApiError(400, "Main image is required")
   }
 
@@ -66,8 +66,11 @@ const createProduct = asyncHandler(async (req, res) => {
   const subImages = req.files.subImages && req.files.subImages.length
   ? await Promise.all(req.files.subImages.map(async (image) => {
       const imageLocalPath = image.path;
-      const imageUrl = await uploadOnCloudinary(imageLocalPath);
-      return { url: imageUrl, localPath: imageLocalPath };
+      const imageurl= await uploadOnCloudinary(imageLocalPath);
+      return { url: imageurl.url, 
+        // localPath: imageLocalPath
+        public_id:image.public_id
+       };
     }))
   : [];
 
@@ -80,7 +83,8 @@ const createProduct = asyncHandler(async (req, res) => {
     price,
     owner,
     mainImage: {
-      url: mainImageUrl,
+      url: mainImage.url,
+      publicid:mainImage.public_id,
       localPath: mainImageLocalPath,
     },
     subImages,
@@ -105,7 +109,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   const mainImage = req.files?.mainImage?.length
     ? {
         // If user has uploaded new main image then we have to create an object with new url and local path in the project
-        url: getStaticFilePath(req, req.files?.mainImage[0]?.filename),
+        url: await uploadOnCloudinary(req, req.files?.mainImage[0]?.filename),
         localPath: getLocalPath(req.files?.mainImage[0]?.filename),
       }
     : product.mainImage; // if there is no new main image uploaded we will stay with the old main image of the product
@@ -116,10 +120,12 @@ const updateProduct = asyncHandler(async (req, res) => {
   let subImages =
     // If user has uploaded new sub images then we have to create an object with new url and local path in the array format
     req.files?.subImages && req.files.subImages?.length
-      ? req.files.subImages.map((image) => {
-          const imageUrl = getStaticFilePath(req, image.filename);
-          const imageLocalPath = getLocalPath(image.filename);
-          return { url: imageUrl, localPath: imageLocalPath };
+      ? req.files.subImages.map(async (image) => {
+          const imageUrl = await uploadOnCloudinary(req, image.filename);
+          // const imageLocalPath = getLocalPath(image.filename);
+          return { url: imageUrl,
+            //  localPath: imageLocalPath
+             };
         })
       : []; // if there are no new sub images uploaded we want to keep an empty array
 
@@ -138,7 +144,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     subImages?.map((img) => removeLocalFile(img.localPath));
     if (product.mainImage.url !== mainImage.url) {
       // If use has uploaded new main image remove the newly uploaded main image as there is no updation happening
-      removeLocalFile(mainImage.localPath);
+      // removeLocalFile(mainImage.localPath);
     }
     throw new ApiError(
       400,
