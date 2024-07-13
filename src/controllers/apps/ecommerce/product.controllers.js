@@ -86,7 +86,7 @@ const createProduct = asyncHandler(async (req, res) => {
     owner,
     mainImage: {
       url: mainImage.url,
-      publicid:mainImage.public_id,
+      public_id:mainImage.public_id,
       localPath: mainImageLocalPath,
     },
     subImages,
