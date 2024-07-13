@@ -19,7 +19,7 @@ const productSchema = new Schema(
       type: {
         url: String,
         localPath: String,
-        publicid:String,
+        public_id:String,
       },
     },
     name: {

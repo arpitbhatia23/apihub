@@ -3,6 +3,8 @@ import { Product } from "../../../models/apps/ecommerce/product.models.js";
 import { ApiError } from "../../../utils/ApiError.js";
 import { ApiResponse } from "../../../utils/ApiResponse.js";
 import { asyncHandler } from "../../../utils/asyncHandler.js";
+import { v2 as cloudinary} from "cloudinary";
+
 import {
   getLocalPath,
   getMongoosePaginationOptions,
@@ -145,6 +147,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (product.mainImage.url !== mainImage.url) {
       // If use has uploaded new main image remove the newly uploaded main image as there is no updation happening
       // removeLocalFile(mainImage.localPath);
+      
     }
     throw new ApiError(
       400,
@@ -180,7 +183,9 @@ const updateProduct = asyncHandler(async (req, res) => {
   // Once the product is updated. Do some cleanup
   if (product.mainImage.url !== mainImage.url) {
     // If user is uploading new main image remove the previous one because we don't need that anymore
-    removeLocalFile(product.mainImage.localPath);
+    // removeLocalFile(product.mainImage.localPath);
+    cloudinary.uploader.destroy(product.mainImage.public_id)
+
   }
 
   return res
@@ -273,7 +278,8 @@ const removeProductSubImage = asyncHandler(async (req, res) => {
 
   if (removedSubImage) {
     // remove the file from file system as well
-    removeLocalFile(removedSubImage.localPath);
+    // removeLocalFile(removedSubImage.localPath);
+cloudinary.uploader.destroy(removedSubImage.public_id)
   }
 
   return res
@@ -295,10 +301,11 @@ const deleteProduct = asyncHandler(async (req, res) => {
   }
 
   const productImages = [product.mainImage, ...product.subImages];
-
+console.log(productImages)
   productImages.map((image) => {
     // remove images associated with the product that is being deleted
    // removeLocalFile(image.localPath);
+   cloudinary.uploader.destroy(image.public_id)
   });
 
   return res
