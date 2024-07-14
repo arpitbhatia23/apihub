@@ -68,7 +68,7 @@ const createProduct = asyncHandler(async (req, res) => {
       const imageLocalPath = image.path;
       const imageurl= await uploadOnCloudinary(imageLocalPath);
       return { url: imageurl.url, 
-        public_id:image.public_id
+        public_id:imageurl.public_id
        };
     }))
   : [];
@@ -145,6 +145,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     if (product.mainImage.url !== mainImage.url) {
       // If use has uploaded new main image remove the newly uploaded main image as there is no updation happening
       // removeLocalFile(mainImage.localPath);
+      cloudinary.uploader.destroy(mainImage.localPath.public_id)
       
     }
     throw new ApiError(
