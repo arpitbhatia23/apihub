@@ -63,14 +63,13 @@ const createProduct = asyncHandler(async (req, res) => {
   // Check if user has uploaded any subImages if yes then extract the file path
   // else assign an empty array
   /**
-   * @type {{ url: string; localPath: string; }[]}
+   * @type {{ url: string; public_id: string; }[]}
    */
   const subImages = req.files.subImages && req.files.subImages.length
   ? await Promise.all(req.files.subImages.map(async (image) => {
       const imageLocalPath = image.path;
       const imageurl= await uploadOnCloudinary(imageLocalPath);
       return { url: imageurl.url, 
-        // localPath: imageLocalPath
         public_id:image.public_id
        };
     }))
