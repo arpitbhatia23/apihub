@@ -8,8 +8,6 @@ import { v2 as cloudinary} from "cloudinary";
 import {
   getLocalPath,
   getMongoosePaginationOptions,
-  getStaticFilePath,
-  removeLocalFile,
 } from "../../../utils/helpers.js";
 import { MAXIMUM_SUB_IMAGE_COUNT } from "../../../constants.js";
 import { Category } from "../../../models/apps/ecommerce/category.models.js";
@@ -116,16 +114,17 @@ const updateProduct = asyncHandler(async (req, res) => {
     : product.mainImage; // if there is no new main image uploaded we will stay with the old main image of the product
 
   /**
-   * @type {{ url: string; localPath: string; }[]}
+   * @type {{ url: string; public_id: string; localPath:string}[]}
    */
   let subImages =
     // If user has uploaded new sub images then we have to create an object with new url and local path in the array format
     req.files?.subImages && req.files.subImages?.length
       ? req.files.subImages.map(async (image) => {
           const imageUrl = await uploadOnCloudinary(req, image.filename);
-          // const imageLocalPath = getLocalPath(image.filename);
-          return { url: imageUrl,
-            //  localPath: imageLocalPath
+          const imageLocalPath = getLocalPath(image.filename);
+          return { url: imageUrl.url,
+             localPath: imageLocalPath,
+            public_id:imageUrl.public_id
              };
         })
       : []; // if there are no new sub images uploaded we want to keep an empty array
@@ -142,7 +141,7 @@ const updateProduct = asyncHandler(async (req, res) => {
     // Before throwing an error we need to do some cleanup
 
     // remove the  newly uploaded sub images by multer as there is not updation happening
-    subImages?.map((img) => removeLocalFile(img.localPath));
+    subImages?.map((img) => cloudinary.uploader.destroy(img.public_id));
     if (product.mainImage.url !== mainImage.url) {
       // If use has uploaded new main image remove the newly uploaded main image as there is no updation happening
       // removeLocalFile(mainImage.localPath);
